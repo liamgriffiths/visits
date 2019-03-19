@@ -1,9 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
-use diesel::result::QueryResult;
 
-use crate::models::User;
-use crate::schema::visits;
+use crate::{models::User, pg::Connection, schema::visits};
 
 #[derive(Debug, Queryable, Associations, Identifiable, Clone)]
 #[table_name = "visits"]
@@ -18,7 +16,7 @@ pub struct Visit {
 }
 
 impl Visit {
-    pub fn for_user(conn: &PgConnection, user: &User) -> QueryResult<Vec<Visit>> {
+    pub fn for_user(conn: &Connection, user: &User) -> QueryResult<Vec<Visit>> {
         Visit::belonging_to(user).load::<Visit>(conn)
     }
 
@@ -34,20 +32,22 @@ impl Visit {
 
     // Count up all the days in the visit since some start-date
     pub fn days_since(&self, start_at: NaiveDate) -> i64 {
-        if start_at.gt(&self.exit_at) {
+        if start_at > self.exit_at {
+            // when we're starting before we left
             0
+        } else if start_at > self.enter_at {
+            // when we're starting after we entered
+            self.exit_at.signed_duration_since(start_at).num_days() + 1
         } else {
-            // TODO: maybe clean this one up a bit.
-            let days_since_start = self.exit_at.signed_duration_since(start_at).num_days() + 1;
-            let days_since_enter = self.exit_at.signed_duration_since(self.enter_at).num_days() + 1;
-            std::cmp::min(days_since_enter, days_since_start)
+            // when we're starting before we entered
+            self.exit_at.signed_duration_since(self.enter_at).num_days() + 1
         }
     }
 
     // Count up all the days for slice of Visits relative to the current Visit since start-date
     pub fn sum_all_days_since(&self, start_at: NaiveDate, vs: &[Visit]) -> i64 {
         vs.iter()
-            .filter(|v| v.enter_at.lt(&self.exit_at))
+            .filter(|v| v.enter_at < self.exit_at)
             .fold(0, |acc, v| acc + v.days_since(start_at))
     }
 }
@@ -61,10 +61,11 @@ pub struct NewVisit {
 }
 
 impl NewVisit {
-    pub fn create(&self, conn: &PgConnection) -> QueryResult<Visit> {
-        diesel::insert_into(visits::table)
-            .values(self)
-            .get_result(conn)
+    pub fn create(&self, conn: &Connection) -> QueryResult<Visit> {
+        use crate::schema::visits::dsl;
+        use diesel::insert_into;
+
+        insert_into(dsl::visits).values(self).get_result(conn)
     }
 }
 

@@ -1,14 +1,6 @@
 #[macro_use]
 extern crate diesel;
 
-// TODO: these macros clobber diesel it seems :(
-// #[macro_use]
-extern crate prettytable;
-
-extern crate exitfailure;
-extern crate failure;
-extern crate structopt;
-
 use dotenv::dotenv;
 use exitfailure::ExitFailure;
 use std::env;
@@ -21,9 +13,11 @@ mod pg;
 mod schema;
 mod session;
 
-use self::cli::Cli;
-use self::cli::Cli::{Add, Summary};
-use app::{App, Config};
+use crate::{
+    app::{App, Config},
+    cli::Cli,
+    cli::Cli::{Add, Summary},
+};
 
 fn main() -> Result<(), ExitFailure> {
     dotenv().ok();
@@ -34,16 +28,14 @@ fn main() -> Result<(), ExitFailure> {
 
     match Cli::from_args() {
         Summary { username } => {
-            let ses = app.session(username);
-            ses.print_summary();
+            app.session(&username).print_summary();
         }
         Add {
             username,
             enter,
             exit,
         } => {
-            let ses = app.session(username);
-            let visit = ses.add_visit(enter, exit);
+            let visit = app.session(&username).add_visit(enter, exit);
             println!("Added: {} to {}", visit.enter_at, visit.exit_at);
         }
     };

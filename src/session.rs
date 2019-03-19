@@ -3,20 +3,24 @@ use prettytable;
 use prettytable::{Attr, Cell, Row, Table};
 use time::Duration;
 
-use crate::models::{NewVisit, User, Visit};
-use crate::pg::Connection;
+use crate::{
+    models::{NewVisit, User, Visit},
+    pg::Connection,
+};
 
+/// A Session represents a user using the app and let's them do things.
 pub struct Session {
     conn: Connection,
     user: User,
 }
 
 impl Session {
-    pub fn new(conn: Connection, username: String) -> Session {
+    pub fn new(conn: Connection, username: &str) -> Session {
         let user = User::find_or_create(&conn, &username).unwrap();
         Session { conn, user }
     }
 
+    /// Add a new visit to the users' log.
     pub fn add_visit(&self, enter_at: NaiveDate, exit_at: NaiveDate) -> Visit {
         let visit = NewVisit {
             user_id: self.user.id,
@@ -26,6 +30,7 @@ impl Session {
         visit.create(&self.conn).unwrap()
     }
 
+    /// Prints out a summary of the users' visits.
     // TODO: make the period length and max-days-per-period to be parameters
     pub fn print_summary(&self) {
         let visits = Visit::for_user(&self.conn, &self.user).unwrap();

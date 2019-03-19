@@ -1,10 +1,10 @@
-use crate::pg::{pool, Connection, ConnectionPool};
-use crate::session::Session;
+use crate::{pg::ConnectionPool, session::Session};
 
 pub struct Config {
     pub database_url: String,
 }
 
+/// App holds on to any shared state across sessions
 pub struct App {
     pg_pool: ConnectionPool,
 }
@@ -12,15 +12,12 @@ pub struct App {
 impl App {
     pub fn new(config: Config) -> App {
         App {
-            pg_pool: pool(&config.database_url),
+            pg_pool: ConnectionPool::new(&config.database_url),
         }
     }
 
-    pub fn session(&self, username: String) -> Session {
-        Session::new(self.conn(), username)
-    }
-
-    fn conn(&self) -> Connection {
-        self.pg_pool.get().unwrap()
+    /// Create a new session for a user
+    pub fn session(&self, username: &String) -> Session {
+        Session::new(self.pg_pool.conn(), username)
     }
 }
