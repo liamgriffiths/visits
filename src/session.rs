@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use failure::Error;
 use prettytable;
 use prettytable::{Attr, Cell, Row, Table};
 use time::Duration;
@@ -8,32 +9,34 @@ use crate::{
     pg::Connection,
 };
 
-/// A Session represents a user using the app and let's them do things.
+/// A Session represents a someone using the app and let's them do things.
 pub struct Session {
     conn: Connection,
     user: User,
 }
 
 impl Session {
-    pub fn new(conn: Connection, username: &str) -> Session {
-        let user = User::find_or_create(&conn, &username).unwrap();
-        Session { conn, user }
+    pub fn new(conn: Connection, username: &str) -> Result<Session, Error> {
+        let user = User::find_or_create(&conn, &username)?;
+        Ok(Session { conn, user })
     }
 
     /// Add a new visit to the users' log.
-    pub fn add_visit(&self, enter_at: NaiveDate, exit_at: NaiveDate) -> Visit {
+    pub fn add_visit(&self, enter_at: NaiveDate, exit_at: NaiveDate) -> Result<Visit, Error> {
         let visit = NewVisit {
             user_id: self.user.id,
             enter_at,
             exit_at,
-        };
-        visit.create(&self.conn).unwrap()
+        }
+        .create(&self.conn)?;
+
+        Ok(visit)
     }
 
     /// Prints out a summary of the users' visits.
     // TODO: make the period length and max-days-per-period to be parameters
-    pub fn print_summary(&self) {
-        let visits = Visit::for_user(&self.conn, &self.user).unwrap();
+    pub fn print_summary(&self) -> Result<(), Error> {
+        let visits = Visit::for_user(&self.conn, &self.user)?;
 
         let mut table = Table::new();
         table.add_row(Row::new(vec![
@@ -61,5 +64,7 @@ impl Session {
         }
 
         table.printstd();
+
+        Ok(())
     }
 }

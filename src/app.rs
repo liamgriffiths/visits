@@ -6,7 +6,7 @@ pub struct Config {
     pub database_url: String,
 }
 
-/// App holds on to any shared state across sessions
+/// App holds on to any shared state across sessions. For example, the database connection pool.
 pub struct App {
     pg_pool: ConnectionPool,
 }
@@ -20,6 +20,7 @@ impl App {
     /// Create a new session for a user
     pub fn session(&self, username: &str) -> Result<Session, Error> {
         let conn = self.pg_pool.get()?;
-        Ok(Session::new(conn, username))
+        let session = Session::new(conn, username)?;
+        Ok(session)
     }
 }
