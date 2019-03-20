@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use failure::Error;
-use prettytable;
+
+use prettytable::{cell, row};
 use prettytable::{Attr, Cell, Row, Table};
 use time::Duration;
 
@@ -55,37 +56,31 @@ impl Session {
         table.add_row(Row::new(vec![
             Cell::new("Next possible visit").with_style(Attr::Bold)
         ]));
-        table.add_row(Row::new(vec![
-            Cell::new("Id").with_style(Attr::Bold),
-            Cell::new("Entry").with_style(Attr::Bold),
-            Cell::new("Exit").with_style(Attr::Bold),
-            Cell::new("Length").with_style(Attr::Bold),
-            Cell::new(&format!("Days left (of {})", max_days)).with_style(Attr::Bold),
-        ]));
+
+        table.add_row(row![
+            "Id",
+            "Entry",
+            "Exit",
+            "Length",
+            &format!("Days left (of {})", max_days)
+        ]);
 
         let mut start_at = v.exit_at - Duration::days(period);
         let mut done = false;
-        let mut days_left = 0;
+        let mut days_left;
 
         while !done {
-            v.enter_at = v.enter_at + Duration::days(1);
-            v.exit_at = v.exit_at + Duration::days(1);
-            start_at = start_at + Duration::days(1);
+            v.enter_at += Duration::days(1);
+            v.exit_at += Duration::days(1);
+            start_at += Duration::days(1);
             days_left = max_days - v.sum_all_days_since(start_at, &visits);
             done = days_left >= length;
         }
 
-        table.add_row(Row::new(vec![
-            Cell::new(&format!("{}", v.id)),
-            Cell::new(&format!("{}", v.enter_at)),
-            Cell::new(&format!("{}", v.exit_at)),
-            Cell::new(&format!("{}", v.days())),
-            Cell::new(&format!(
-                "{}",
-                max_days
-                    - v.sum_all_days_since(v.exit_at - Duration::days(period + length), &visits)
-            )),
-        ]));
+        days_left =
+            max_days - v.sum_all_days_since(v.exit_at - Duration::days(period + length), &visits);
+
+        table.add_row(row![v.id, v.enter_at, v.exit_at, v.days(), days_left]);
 
         table.printstd();
 
@@ -98,28 +93,20 @@ impl Session {
         let visits = Visit::for_user(&self.conn, &self.user)?;
 
         let mut table = Table::new();
-        table.add_row(Row::new(vec![
-            Cell::new("Id").with_style(Attr::Bold),
-            Cell::new("Entry").with_style(Attr::Bold),
-            Cell::new("Exit").with_style(Attr::Bold),
-            Cell::new("Length").with_style(Attr::Bold),
-            // Cell::new("period").with_style(Attr::Bold),
-            Cell::new(&format!("Days left (of {})", max_days)).with_style(Attr::Bold),
-        ]));
+
+        table.add_row(row![
+            "Id",
+            "Entry",
+            "Exit",
+            "Length",
+            &format!("Days left (of {})", max_days)
+        ]);
 
         for v in &visits {
             let start_at = v.exit_at - Duration::days(period);
             let used_days = v.sum_all_days_since(start_at, &visits);
             let days_left = max_days - used_days;
-
-            table.add_row(Row::new(vec![
-                Cell::new(&format!("{}", v.id)),
-                Cell::new(&format!("{}", v.enter_at)),
-                Cell::new(&format!("{}", v.exit_at)),
-                Cell::new(&format!("{}", v.days())),
-                // Cell::new(&format!("{} -> {}", start_at, end_at)),
-                Cell::new(&format!("{}", days_left)),
-            ]));
+            table.add_row(row![v.id, v.enter_at, v.exit_at, v.days(), days_left]);
         }
 
         table.printstd();
