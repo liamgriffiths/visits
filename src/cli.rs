@@ -31,7 +31,7 @@ pub enum Cli {
     },
 
     /// Prints out a summary of your visits
-    #[structopt(name = "summary")]
+    #[structopt(name = "ls")]
     Summary {
         #[structopt(long = "username", short = "u")]
         username: String,
@@ -43,6 +43,25 @@ pub enum Cli {
         /// The max number of days per period.
         #[structopt(long = "days", short = "d", default_value = "90")]
         max_days: i64,
+    },
+
+    /// Find the next date available for a visit with optional length
+    #[structopt(name = "next")]
+    Next {
+        #[structopt(long = "username", short = "u")]
+        username: String,
+
+        /// The number of days in a period
+        #[structopt(long = "period", short = "p", default_value = "180")]
+        period: i64,
+
+        /// The max number of days per period.
+        #[structopt(long = "days", short = "d", default_value = "90")]
+        max_days: i64,
+
+        /// The number of days in a period
+        #[structopt(long = "length", short = "l", default_value = "1")]
+        length: i64,
     },
 }
 

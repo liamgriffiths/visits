@@ -16,7 +16,7 @@ mod session;
 use crate::{
     app::{App, Config},
     cli::Cli,
-    cli::Cli::{Add, Remove, Summary},
+    cli::Cli::{Add, Next, Remove, Summary},
 };
 
 fn main() -> Result<(), ExitFailure> {
@@ -35,6 +35,15 @@ fn main() -> Result<(), ExitFailure> {
             max_days,
         } => {
             app.session(&username)?.print_summary(period, max_days)?;
+        }
+
+        Next {
+            username,
+            length,
+            period,
+            max_days,
+        } => {
+            app.session(&username)?.next(period, max_days, length)?;
         }
 
         Add {
