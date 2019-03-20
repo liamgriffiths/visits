@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
 use failure::Error;
+use time::Duration;
 
 use crate::{models::User, pg::Connection, schema::visits};
 
@@ -17,10 +18,12 @@ pub struct Visit {
 }
 
 impl Visit {
+    /// Find all visits for a user
     pub fn for_user(conn: &Connection, user: &User) -> QueryResult<Vec<Visit>> {
         Visit::belonging_to(user).load::<Visit>(conn)
     }
 
+    /// Delete a visit for a user
     // TODO: this feels a little awkward, maybe there is a better way?
     pub fn delete_for_user(conn: &Connection, user: &User, id: i32) -> Result<usize, Error> {
         use crate::schema::visits::dsl;
@@ -34,6 +37,47 @@ impl Visit {
         .execute(conn)?;
 
         Ok(res)
+    }
+
+    /// Finds the next possible visit for some parameters. We'd like to know the next possible
+    /// dates for a visit when the visit is some length and we're following the rules of the period
+    /// and max-days for that period.
+    pub fn next_for_user(
+        conn: &Connection,
+        user: &User,
+        period: i64,
+        max_days: i64,
+        length: i64,
+    ) -> Result<Visit, Error> {
+        let visits = Visit::for_user(conn, user)?;
+        let today = chrono::Utc::now().naive_utc().date();
+        let one_day = Duration::days(1);
+
+        // TODO: It might be nice to implement this on a different version of the struct so we're
+        // not adding in values we don't care about.
+        let mut v = Visit {
+            id: 0,
+            user_id: user.id,
+            enter_at: today,
+            exit_at: today + Duration::days(length - 1),
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
+        };
+
+        let mut start_at = v.exit_at - Duration::days(period);
+        let mut done = false;
+
+        // Keep incrementing the the days up until we have at least the the number of
+        // days left as we want for the length of the visit.
+        // TODO: There is likely a nicer way to do this.
+        while !done {
+            v.enter_at += one_day;
+            v.exit_at += one_day;
+            start_at += one_day;
+            done = max_days - v.sum_all_days_since(start_at, &visits) >= length;
+        }
+
+        Ok(v)
     }
 
     // Count up all the days in a single Visit
