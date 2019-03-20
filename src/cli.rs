@@ -19,6 +19,17 @@ pub enum Cli {
         exit: NaiveDate,
     },
 
+    /// Remove a visit to your log
+    #[structopt(name = "rm")]
+    Remove {
+        #[structopt(long = "username", short = "u")]
+        username: String,
+
+        /// Visit Id to remove.
+        #[structopt(long = "id")]
+        id: i32,
+    },
+
     /// Prints out a summary of your visits
     #[structopt(name = "summary")]
     Summary {

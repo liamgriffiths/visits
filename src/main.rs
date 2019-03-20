@@ -16,7 +16,7 @@ mod session;
 use crate::{
     app::{App, Config},
     cli::Cli,
-    cli::Cli::{Add, Summary},
+    cli::Cli::{Add, Remove, Summary},
 };
 
 fn main() -> Result<(), ExitFailure> {
@@ -39,6 +39,10 @@ fn main() -> Result<(), ExitFailure> {
         } => {
             let visit = app.session(&username)?.add_visit(enter, exit)?;
             println!("Added: {} to {}", visit.enter_at, visit.exit_at);
+        }
+        Remove { username, id } => {
+            let visit = app.session(&username)?.remove_visit(id)?;
+            println!("Deleted: {}", visit);
         }
     };
 

@@ -1,5 +1,6 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
+use failure::Error;
 
 use crate::{models::User, pg::Connection, schema::visits};
 
@@ -18,6 +19,18 @@ pub struct Visit {
 impl Visit {
     pub fn for_user(conn: &Connection, user: &User) -> QueryResult<Vec<Visit>> {
         Visit::belonging_to(user).load::<Visit>(conn)
+    }
+
+    // TODO: this feels a little awkward, maybe there is a better way?
+    pub fn delete_for_user(conn: &Connection, user: &User, id: i32) -> Result<usize, Error> {
+        use crate::schema::visits::dsl;
+        let res = diesel::delete(
+            dsl::visits
+                .filter(dsl::id.eq(id))
+                .filter(dsl::user_id.eq(user.id)),
+        )
+        .execute(conn)?;
+        Ok(res)
     }
 
     // Count up all the days in a single Visit

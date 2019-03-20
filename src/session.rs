@@ -33,6 +33,11 @@ impl Session {
         Ok(visit)
     }
 
+    pub fn remove_visit(&self, id: i32) -> Result<usize, Error> {
+        let res = Visit::delete_for_user(&self.conn, &self.user, id)?;
+        Ok(res)
+    }
+
     /// Prints out a summary of the users' visits.
     // TODO: make the period length and max-days-per-period to be parameters
     pub fn print_summary(&self) -> Result<(), Error> {
