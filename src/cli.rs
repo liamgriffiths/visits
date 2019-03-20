@@ -35,6 +35,14 @@ pub enum Cli {
     Summary {
         #[structopt(long = "username", short = "u")]
         username: String,
+
+        /// The number of days in a period
+        #[structopt(long = "period", short = "p", default_value = "180")]
+        period: i64,
+
+        /// The max number of days per period.
+        #[structopt(long = "days", short = "d", default_value = "90")]
+        max_days: i64,
     },
 }
 

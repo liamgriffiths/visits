@@ -24,12 +24,15 @@ impl Visit {
     // TODO: this feels a little awkward, maybe there is a better way?
     pub fn delete_for_user(conn: &Connection, user: &User, id: i32) -> Result<usize, Error> {
         use crate::schema::visits::dsl;
+
+        // Returns number of rows deleted.
         let res = diesel::delete(
             dsl::visits
                 .filter(dsl::id.eq(id))
                 .filter(dsl::user_id.eq(user.id)),
         )
         .execute(conn)?;
+
         Ok(res)
     }
 

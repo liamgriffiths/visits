@@ -29,9 +29,14 @@ fn main() -> Result<(), ExitFailure> {
     let app = App::new(config)?;
 
     match Cli::from_args() {
-        Summary { username } => {
-            app.session(&username)?.print_summary()?;
+        Summary {
+            username,
+            period,
+            max_days,
+        } => {
+            app.session(&username)?.print_summary(period, max_days)?;
         }
+
         Add {
             username,
             enter,
@@ -40,6 +45,7 @@ fn main() -> Result<(), ExitFailure> {
             let visit = app.session(&username)?.add_visit(enter, exit)?;
             println!("Added: {} to {}", visit.enter_at, visit.exit_at);
         }
+
         Remove { username, id } => {
             let visit = app.session(&username)?.remove_visit(id)?;
             println!("Deleted: {}", visit);

@@ -40,23 +40,23 @@ impl Session {
 
     /// Prints out a summary of the users' visits.
     // TODO: make the period length and max-days-per-period to be parameters
-    pub fn print_summary(&self) -> Result<(), Error> {
+    pub fn print_summary(&self, period: i64, max_days: i64) -> Result<(), Error> {
         let visits = Visit::for_user(&self.conn, &self.user)?;
 
         let mut table = Table::new();
         table.add_row(Row::new(vec![
-            Cell::new("id").with_style(Attr::Bold),
-            Cell::new("entry").with_style(Attr::Bold),
-            Cell::new("exit").with_style(Attr::Bold),
-            Cell::new("length").with_style(Attr::Bold),
+            Cell::new("Id").with_style(Attr::Bold),
+            Cell::new("Entry").with_style(Attr::Bold),
+            Cell::new("Exit").with_style(Attr::Bold),
+            Cell::new("Length").with_style(Attr::Bold),
             // Cell::new("period").with_style(Attr::Bold),
-            Cell::new("days left").with_style(Attr::Bold),
+            Cell::new(&format!("Days left (of {})", max_days)).with_style(Attr::Bold),
         ]));
 
         for v in &visits {
-            let start_at = v.exit_at - Duration::days(365);
+            let start_at = v.exit_at - Duration::days(period);
             let used_days = v.sum_all_days_since(start_at, &visits);
-            let days_left = 182 - used_days;
+            let days_left = max_days - used_days;
 
             table.add_row(Row::new(vec![
                 Cell::new(&format!("{}", v.id)),
