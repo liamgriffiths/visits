@@ -11,11 +11,11 @@ pub enum Cli {
         username: String,
 
         /// When you came (Format: "yyyy-mm-dd")
-        #[structopt(long = "enter", short = "i", parse(try_from_str = "parse_date"))]
+        #[structopt(parse(try_from_str = "parse_date"))]
         enter: NaiveDate,
 
         /// When you left (Format: "yyyy-mm-dd")
-        #[structopt(long = "exit", short = "o", parse(try_from_str = "parse_date"))]
+        #[structopt(parse(try_from_str = "parse_date"))]
         exit: NaiveDate,
     },
 
@@ -26,13 +26,13 @@ pub enum Cli {
         username: String,
 
         /// Visit Id to remove.
-        #[structopt(long = "id")]
+        #[structopt(name = "id")]
         id: i32,
     },
 
-    /// Prints out a summary of your visits
+    /// List out your visits
     #[structopt(name = "ls")]
-    Summary {
+    List {
         #[structopt(long = "username", short = "u")]
         username: String,
 
@@ -63,6 +63,7 @@ pub enum Cli {
         #[structopt(long = "length", short = "l", default_value = "1")]
         length: i64,
     },
+    // TODO: Add `check` feature - to test whether potential enter/exit would be OK
 }
 
 fn parse_date(s: &str) -> Result<NaiveDate, ParseError> {

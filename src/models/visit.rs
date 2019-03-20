@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use failure::Error;
 use time::Duration;
@@ -20,7 +20,10 @@ pub struct Visit {
 impl Visit {
     /// Find all visits for a user
     pub fn for_user(conn: &Connection, user: &User) -> QueryResult<Vec<Visit>> {
-        Visit::belonging_to(user).load::<Visit>(conn)
+        use crate::schema::visits::dsl;
+        Visit::belonging_to(user)
+            .order(dsl::enter_at)
+            .load::<Visit>(conn)
     }
 
     /// Delete a visit for a user
@@ -50,7 +53,7 @@ impl Visit {
         length: i64,
     ) -> Result<Visit, Error> {
         let visits = Visit::for_user(conn, user)?;
-        let today = chrono::Utc::now().naive_utc().date();
+        let today = Utc::now().naive_utc().date();
         let one_day = Duration::days(1);
 
         // TODO: It might be nice to implement this on a different version of the struct so we're
@@ -60,16 +63,16 @@ impl Visit {
             user_id: user.id,
             enter_at: today,
             exit_at: today + Duration::days(length - 1),
-            created_at: chrono::Utc::now().naive_utc(),
-            updated_at: chrono::Utc::now().naive_utc(),
+            created_at: NaiveDateTime::from_timestamp(0, 0),
+            updated_at: NaiveDateTime::from_timestamp(0, 0),
         };
-
-        let mut start_at = v.exit_at - Duration::days(period);
-        let mut done = false;
 
         // Keep incrementing the the days up until we have at least the the number of
         // days left as we want for the length of the visit.
         // TODO: There is likely a nicer way to do this.
+        let mut start_at = v.exit_at - Duration::days(period);
+        let mut done = false;
+
         while !done {
             v.enter_at += one_day;
             v.exit_at += one_day;
@@ -109,6 +112,12 @@ impl Visit {
         vs.iter()
             .filter(|v| v.enter_at < self.exit_at)
             .fold(0, |acc, v| acc + v.days_since(start_at))
+    }
+
+    // Calculate the days until today
+    pub fn days_until_now(&self) -> i64 {
+        let today = Utc::now().naive_utc().date();
+        (self.enter_at - today).num_days()
     }
 }
 
