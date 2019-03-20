@@ -1,3 +1,5 @@
+use failure::Error;
+
 use crate::{pg::ConnectionPool, session::Session};
 
 pub struct Config {
@@ -10,14 +12,14 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(config: Config) -> App {
-        App {
-            pg_pool: ConnectionPool::new(&config.database_url),
-        }
+    pub fn new(config: Config) -> Result<App, Error> {
+        let pg_pool = ConnectionPool::new(&config.database_url)?;
+        Ok(App { pg_pool })
     }
 
     /// Create a new session for a user
-    pub fn session(&self, username: &String) -> Session {
-        Session::new(self.pg_pool.conn(), username)
+    pub fn session(&self, username: &str) -> Result<Session, Error> {
+        let conn = self.pg_pool.get()?;
+        Ok(Session::new(conn, username))
     }
 }

@@ -22,20 +22,22 @@ use crate::{
 fn main() -> Result<(), ExitFailure> {
     dotenv().ok();
 
-    let app = App::new(Config {
+    let config = Config {
         database_url: env::var("DATABASE_URL")?,
-    });
+    };
+
+    let app = App::new(config)?;
 
     match Cli::from_args() {
         Summary { username } => {
-            app.session(&username).print_summary();
+            app.session(&username)?.print_summary();
         }
         Add {
             username,
             enter,
             exit,
         } => {
-            let visit = app.session(&username).add_visit(enter, exit);
+            let visit = app.session(&username)?.add_visit(enter, exit);
             println!("Added: {} to {}", visit.enter_at, visit.exit_at);
         }
     };
