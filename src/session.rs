@@ -2,7 +2,8 @@ use chrono::NaiveDate;
 use failure::Error;
 
 use crate::{
-    models::{NewVisit, User, Visit},
+    models::user::User,
+    models::visit::{NewVisit, Visit},
     pg::Connection,
 };
 

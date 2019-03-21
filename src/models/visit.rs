@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use failure::Error;
 use time::Duration;
 
-use crate::{models::User, pg::Connection, schema::visits};
+use crate::{models::user::User, pg::Connection, schema::visits};
 
 #[derive(Debug, Queryable, Associations, Identifiable, Clone)]
 #[table_name = "visits"]
