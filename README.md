@@ -14,9 +14,6 @@ questions that come up when planning repeated trips.
 
 I also made it to learn more [Rust](https://www.rust-lang.org/) :sweat_smile:
 
-## Status
-
-:warning: **In development** :warning:
 
 ## Setup
 
@@ -131,14 +128,6 @@ OK: Next possible visit found!
 | 2019-04-13 | 2019-04-26 | 14     | 23            |
 +------------+------------+--------+---------------+
 ```
-
-## Next steps
-
-- [ ] Add feature to update a visits entry/exit dates
-- [ ] Add feature to "check" whether a potential visit will be ok
-- [ ] Add "interactive" elements to the cli for adding and removing visits
-- [ ] Package this up into an easily-installable cli program
-- [ ] Build a web server + web app
 
 ## Contributing + Thanks :octocat:
 
